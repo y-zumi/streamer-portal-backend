@@ -96,6 +96,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: read API key from env
 	client := YoutubeAPIClient{apiKey: ""}
 	youtube, err := client.GetLiveStatus(ctx, req.StreamerID)
 	if err != nil {
