@@ -8,28 +8,32 @@ import (
 	"os"
 )
 
-type GetLiveStatusesRequest struct {
+// ListLiveStatusesRequest is request to get live statuses
+type ListLiveStatusesRequest struct {
 	StreamerID string `json:"streamer_id"`
 }
 
-type GetLiveStatusesResponse struct {
+// ListLiveStatusesResponse is response to get live statuses
+type ListLiveStatusesResponse struct {
 	LiveStatuses []LiveStatus `json:"live_statuses"`
 }
 
+// LiveStatus represents streamer's live status on the stream platforms
 type LiveStatus struct {
 	PlatformType string `json:"platform_type"`
 	IsLive       bool   `json:"is_live"`
 }
 
+// handler handle live status endpoint
 func handler(w http.ResponseWriter, r *http.Request) {
-	var req GetLiveStatusesRequest
+	var req ListLiveStatusesRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		fmt.Printf("decode error: %v", err)
 		return
 	}
 	fmt.Printf("req: %v", req)
 
-	resp := GetLiveStatusesResponse{
+	resp := ListLiveStatusesResponse{
 		LiveStatuses: []LiveStatus{
 			{
 				PlatformType: "youtube",
@@ -59,8 +63,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// main run http server
 func main() {
-	log.Print("helloworld: starting server...")
+	log.Print("starting server...")
 
 	http.HandleFunc("/live_statuses", handler)
 
