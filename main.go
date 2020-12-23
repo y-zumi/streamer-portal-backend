@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 // ListLiveStatusesRequest is request to get live statuses
@@ -22,6 +24,67 @@ type ListLiveStatusesResponse struct {
 type LiveStatus struct {
 	PlatformType string `json:"platform_type"`
 	IsLive       bool   `json:"is_live"`
+}
+
+// YoutubeAPIClient calls Youtube Data API
+type YoutubeAPIClient struct {
+	apiKey string
+}
+
+// SearchResponse represents youtube api /search endpoint's response
+type SearchResponse struct {
+
+}
+
+const (
+	// baseUrl represents Youtube Data API endpoint
+	baseUrl = "https://www.googleapis.com/youtube/v3"
+)
+
+// GetLiveStatus get streamer's live status by channel ID in Youtube
+func (c *YoutubeAPIClient) GetLiveStatus(ctx context.Context, channelID string) (*SearchResponse, error){
+	client := http.Client{
+		Transport:     nil,
+		CheckRedirect: nil,
+		Jar:           nil,
+		Timeout:       time.Second*10,
+	}
+
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		fmt.Sprintf("%s/search?part=snippet&eventType=live&type=video&fields=items(snippet/liveBroadcastContent,id/videoId)&channelId=%s&key=%s",baseUrl,channelID,c.apiKey),
+		nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create http request: %w", err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to do http request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.ContentLength <= 0 {
+		return nil, fmt.Errorf("the response content length less than 0")
+	}
+
+	bytes := make([]byte, resp.ContentLength)
+	n, err := resp.Body.Read(bytes)
+	if n <= 0 {
+		return nil, fmt.Errorf("the body less than 0")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to read body: %w", err)
+	}
+
+	s := new(SearchResponse)
+	err = json.Unmarshal(bytes, s)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal: %w", err)
+	}
+
+	return s, nil
 }
 
 // handler handle live status endpoint
