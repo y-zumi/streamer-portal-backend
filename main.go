@@ -33,7 +33,14 @@ type YoutubeAPIClient struct {
 
 // SearchResponse represents youtube api /search endpoint's response
 type SearchResponse struct {
-
+	Items []struct{
+		ID struct{
+			VideoID string `json:"videoId"`
+		} `json:"id"`
+		Snippet struct{
+			LiveBroadcastContent string `json:"liveBroadcastContent"`
+		} `json:"snippet"`
+	}`json:"items"`
 }
 
 const (
@@ -65,23 +72,15 @@ func (c *YoutubeAPIClient) GetLiveStatus(ctx context.Context, channelID string) 
 	}
 	defer resp.Body.Close()
 
-	if resp.ContentLength <= 0 {
-		return nil, fmt.Errorf("the response content length less than 0")
-	}
-
-	bytes := make([]byte, resp.ContentLength)
-	n, err := resp.Body.Read(bytes)
-	if n <= 0 {
-		return nil, fmt.Errorf("the body less than 0")
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to read body: %w", err)
-	}
-
 	s := new(SearchResponse)
-	err = json.Unmarshal(bytes, s)
+	err = json.NewDecoder(resp.Body).Decode(s)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal: %w", err)
+	}
+	fmt.Println(s)
+
+	if len(s.Items) == 0 {
+		return nil, fmt.Errorf("response is empty")
 	}
 
 	return s, nil
@@ -89,18 +88,26 @@ func (c *YoutubeAPIClient) GetLiveStatus(ctx context.Context, channelID string) 
 
 // handler handle live status endpoint
 func handler(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+
 	var req ListLiveStatusesRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		fmt.Printf("decode error: %v", err)
 		return
 	}
-	fmt.Printf("req: %v", req)
+
+	client := YoutubeAPIClient{apiKey: ""}
+	youtube, err := client.GetLiveStatus(ctx, req.StreamerID)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	resp := ListLiveStatusesResponse{
 		LiveStatuses: []LiveStatus{
 			{
 				PlatformType: "youtube",
-				IsLive:       true,
+				IsLive:       youtube.Items[0].Snippet.LiveBroadcastContent == "live",
 			},
 			{
 				PlatformType: "twitch",
