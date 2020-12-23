@@ -33,14 +33,14 @@ type YoutubeAPIClient struct {
 
 // SearchResponse represents youtube api /search endpoint's response
 type SearchResponse struct {
-	Items []struct{
-		ID struct{
+	Items []struct {
+		ID struct {
 			VideoID string `json:"videoId"`
 		} `json:"id"`
-		Snippet struct{
+		Snippet struct {
 			LiveBroadcastContent string `json:"liveBroadcastContent"`
 		} `json:"snippet"`
-	}`json:"items"`
+	} `json:"items"`
 }
 
 const (
@@ -49,18 +49,18 @@ const (
 )
 
 // GetLiveStatus get streamer's live status by channel ID in Youtube
-func (c *YoutubeAPIClient) GetLiveStatus(ctx context.Context, channelID string) (*SearchResponse, error){
+func (c *YoutubeAPIClient) GetLiveStatus(ctx context.Context, channelID string) (*SearchResponse, error) {
 	client := http.Client{
 		Transport:     nil,
 		CheckRedirect: nil,
 		Jar:           nil,
-		Timeout:       time.Second*10,
+		Timeout:       time.Second * 10,
 	}
 
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("%s/search?part=snippet&eventType=live&type=video&fields=items(snippet/liveBroadcastContent,id/videoId)&channelId=%s&key=%s",baseUrl,channelID,c.apiKey),
+		fmt.Sprintf("%s/search?part=snippet&eventType=live&type=video&fields=items(snippet/liveBroadcastContent,id/videoId)&channelId=%s&key=%s", baseUrl, channelID, c.apiKey),
 		nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http request: %w", err)
