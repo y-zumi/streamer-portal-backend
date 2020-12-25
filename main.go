@@ -38,8 +38,8 @@ type YoutubeAPIClient struct {
 	apiKey string
 }
 
-// SearchResponse represents youtube api /search endpoint's response
-type SearchResponse struct {
+// searchResponse represents youtube api /search endpoint's response
+type searchResponse struct {
 	Items []struct {
 		ID struct {
 			VideoID string `json:"videoId"`
@@ -50,13 +50,19 @@ type SearchResponse struct {
 	} `json:"items"`
 }
 
+// Live represents youtube live information
+type Live struct {
+	IsLive  bool
+	VideoID string
+}
+
 const (
 	// baseUrl represents Youtube Data API endpoint
 	baseUrl = "https://www.googleapis.com/youtube/v3"
 )
 
 // GetLiveStatus get streamer's live status by channel ID in Youtube
-func (c *YoutubeAPIClient) GetLiveStatus(ctx context.Context, channelID string) (*SearchResponse, error) {
+func (c *YoutubeAPIClient) GetLiveStatus(ctx context.Context, channelID string) (*Live, error) {
 	client := http.Client{
 		Transport:     nil,
 		CheckRedirect: nil,
@@ -79,17 +85,22 @@ func (c *YoutubeAPIClient) GetLiveStatus(ctx context.Context, channelID string) 
 	}
 	defer resp.Body.Close()
 
-	s := new(SearchResponse)
+	s := new(searchResponse)
 	err = json.NewDecoder(resp.Body).Decode(s)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal: %w", err)
 	}
 
 	if len(s.Items) == 0 {
-		return nil, fmt.Errorf("response is empty")
+		return &Live{
+			IsLive: false,
+		}, nil
 	}
 
-	return s, nil
+	return &Live{
+		IsLive:  s.Items[0].Snippet.LiveBroadcastContent == "live",
+		VideoID: s.Items[0].ID.VideoID,
+	}, nil
 }
 
 // handler handle live status endpoint
@@ -105,7 +116,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: read API key from env
 	client := YoutubeAPIClient{apiKey: e.YoutubeAPIKey}
 	youtube, err := client.GetLiveStatus(ctx, req.StreamerID)
 	if err != nil {
@@ -117,7 +127,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		LiveStatuses: []LiveStatus{
 			{
 				PlatformType: "youtube",
-				IsLive:       youtube.Items[0].Snippet.LiveBroadcastContent == "live",
+				IsLive:       youtube.IsLive,
 			},
 			{
 				PlatformType: "twitch",
