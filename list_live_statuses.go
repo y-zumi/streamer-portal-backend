@@ -30,8 +30,8 @@ type LiveStatus struct {
 	IsLive       bool   `json:"is_live"`
 }
 
-// handler handle live status endpoint
-func handler(w http.ResponseWriter, r *http.Request) {
+// listLiveStatusesHandler handle live status endpoint
+func listLiveStatusesHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	var e env
