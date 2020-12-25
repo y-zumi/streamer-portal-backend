@@ -8,7 +8,14 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/kelseyhightower/envconfig"
 )
+
+// env has environment variables
+type env struct {
+	YoutubeAPIKey string `envconfig:"YOUTUBE_API_KEY"`
+}
 
 // ListLiveStatusesRequest is request to get live statuses
 type ListLiveStatusesRequest struct {
@@ -77,7 +84,6 @@ func (c *YoutubeAPIClient) GetLiveStatus(ctx context.Context, channelID string) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal: %w", err)
 	}
-	fmt.Println(s)
 
 	if len(s.Items) == 0 {
 		return nil, fmt.Errorf("response is empty")
@@ -90,6 +96,9 @@ func (c *YoutubeAPIClient) GetLiveStatus(ctx context.Context, channelID string) 
 func handler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
+	var e env
+	envconfig.Process("", &e)
+
 	var req ListLiveStatusesRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		fmt.Printf("decode error: %v", err)
@@ -97,7 +106,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: read API key from env
-	client := YoutubeAPIClient{apiKey: ""}
+	client := YoutubeAPIClient{apiKey: e.YoutubeAPIKey}
 	youtube, err := client.GetLiveStatus(ctx, req.StreamerID)
 	if err != nil {
 		fmt.Println(err)
