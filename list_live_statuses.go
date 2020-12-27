@@ -11,7 +11,9 @@ import (
 
 // env has environment variables
 type env struct {
-	YoutubeAPIKey string `envconfig:"YOUTUBE_API_KEY"`
+	YoutubeAPIKey   string `envconfig:"YOUTUBE_API_KEY"`
+	TwitchAuthToken string `envconfig:"TWITCH_AUTH_TOKEN"`
+	TwitchClientID  string `envconfig:"TWITCH_CLIENT_ID"`
 }
 
 // ListLiveStatusesRequest is request to get live statuses
@@ -35,7 +37,10 @@ func listLiveStatusesHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	var e env
-	envconfig.Process("", &e)
+	if err := envconfig.Process("", &e); err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	var req ListLiveStatusesRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -44,7 +49,17 @@ func listLiveStatusesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := YoutubeAPIClient{apiKey: e.YoutubeAPIKey}
-	youtube, err := client.GetLiveStatus(ctx, req.StreamerID)
+	youtube, err := client.GetLiveStatus(ctx, "UCx1nAvtVDIsaGmCMSe8ofsQ")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	twitchClient := TwitchClient{
+		AuthToken: e.TwitchAuthToken,
+		ClientID:  e.TwitchClientID,
+	}
+	twitch, err := twitchClient.GetLiveStatus(ctx, "545050196")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -58,7 +73,7 @@ func listLiveStatusesHandler(w http.ResponseWriter, r *http.Request) {
 			},
 			{
 				PlatformType: "twitch",
-				IsLive:       false,
+				IsLive:       twitch.IsLive,
 			},
 			{
 				PlatformType: "niconico",
