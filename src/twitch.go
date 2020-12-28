@@ -31,7 +31,7 @@ type twitchStreamsResponse struct {
 }
 
 const (
-	twitchBaseUrl = "https://api.twitch.tv/helix/streams"
+	twitchBaseUrl = "https://api.twitch.tv/helix"
 )
 
 func (t *TwitchClient) GetLiveStatus(ctx context.Context, userID string) (*Live, error) {
@@ -45,7 +45,7 @@ func (t *TwitchClient) GetLiveStatus(ctx context.Context, userID string) (*Live,
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("%s?user_id=%s", twitchBaseUrl, userID),
+		fmt.Sprintf("%s/streams?user_id=%s", twitchBaseUrl, userID),
 		nil,
 	)
 	if err != nil {
