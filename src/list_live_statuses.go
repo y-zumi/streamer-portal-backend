@@ -35,6 +35,7 @@ type LiveStatus struct {
 // listLiveStatusesHandler handle live status endpoint
 func listLiveStatusesHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	var e env
