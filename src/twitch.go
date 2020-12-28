@@ -34,7 +34,7 @@ const (
 	twitchBaseUrl = "https://api.twitch.tv/helix"
 )
 
-func (t *TwitchClient) GetLiveStatus(ctx context.Context, userID string) (*Live, error) {
+func (c *TwitchClient) GetLive(ctx context.Context, userID string) (*Live, error) {
 	client := http.Client{
 		Transport:     nil,
 		CheckRedirect: nil,
@@ -52,8 +52,8 @@ func (t *TwitchClient) GetLiveStatus(ctx context.Context, userID string) (*Live,
 		return nil, err
 	}
 	req.Header = map[string][]string{
-		"Authorization": {fmt.Sprintf("Bearer %s", t.AuthToken)},
-		"Client-ID":     {t.ClientID},
+		"Authorization": {fmt.Sprintf("Bearer %s", c.AuthToken)},
+		"Client-ID":     {c.ClientID},
 	}
 
 	resp, err := client.Do(req)

@@ -36,8 +36,8 @@ const (
 	baseUrl = "https://www.googleapis.com/youtube/v3"
 )
 
-// GetLiveStatus get streamer's live status by channel ID in Youtube
-func (c *YoutubeAPIClient) GetLiveStatus(ctx context.Context, channelID string) (*Live, error) {
+// GetLive get streamer's live status by channel ID in Youtube
+func (c *YoutubeAPIClient) GetLive(ctx context.Context, channelID string) (*Live, error) {
 	client := http.Client{
 		Transport:     nil,
 		CheckRedirect: nil,

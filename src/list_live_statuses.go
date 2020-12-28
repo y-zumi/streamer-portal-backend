@@ -49,7 +49,7 @@ func listLiveStatusesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := YoutubeAPIClient{apiKey: e.YoutubeAPIKey}
-	youtube, err := client.GetLiveStatus(ctx, "UCx1nAvtVDIsaGmCMSe8ofsQ")
+	youtube, err := client.GetLive(ctx, "UCx1nAvtVDIsaGmCMSe8ofsQ")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -59,7 +59,14 @@ func listLiveStatusesHandler(w http.ResponseWriter, r *http.Request) {
 		AuthToken: e.TwitchAuthToken,
 		ClientID:  e.TwitchClientID,
 	}
-	twitch, err := twitchClient.GetLiveStatus(ctx, "545050196")
+	twitch, err := twitchClient.GetLive(ctx, "545050196")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	niconicoClient := NiconicoClient{}
+	niconico, err := niconicoClient.GetLive(ctx, "2598430")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -77,7 +84,7 @@ func listLiveStatusesHandler(w http.ResponseWriter, r *http.Request) {
 			},
 			{
 				PlatformType: "niconico",
-				IsLive:       false,
+				IsLive:       niconico.IsLive,
 			},
 		},
 	}
